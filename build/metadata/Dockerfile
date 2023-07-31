@@ -31,8 +31,8 @@ WORKDIR /app/metadata/
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/bin/starknet-metadata /go/bin/starknet-metadata
-COPY ./cmd/metadata/mappings ./mappings
 COPY ./cmd/metadata/graphql ./graphql
+COPY ./cmd/metadata/views ./views
 COPY ./build/*.yml ./
 
 ENTRYPOINT ["/go/bin/starknet-metadata"]

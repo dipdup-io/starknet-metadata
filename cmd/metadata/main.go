@@ -58,10 +58,17 @@ func main() {
 		return
 	}
 
+	views, err := createViews(ctx, pg)
+	if err != nil {
+		log.Panic().Err(err).Msg("create views")
+		return
+	}
+
 	if cfg.Hasura != nil {
 		if err := hasura.Create(ctx, hasura.GenerateArgs{
 			Config:         cfg.Hasura,
 			DatabaseConfig: cfg.Database,
+			Views:          views,
 			Models:         []any{new(storage.State), new(storage.TokenMetadata)},
 		}); err != nil {
 			log.Err(err).Msg("hasura.Create")
