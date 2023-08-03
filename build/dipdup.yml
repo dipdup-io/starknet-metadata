@@ -86,15 +86,15 @@ metadata:
         addr: /dnsaddr/node-1.ipfs.4everland.net
   
   filler:
-    datasource: node
-    rps: 3
-    workers_count: 2
-    max_attempts: 5
+    datasource: ${DATASOURCE:-node}
+    rps: ${DATASOURCE_RPS:-3}
+    workers_count: 3
+    max_attempts: ${MAX_RETRY_COUNT:-5}
     delay: 10
 
   receiver:
     workers_count: 10
-    max_attempts: 5
+    max_attempts: ${MAX_RETRY_COUNT:-5}
     delay: 10
 
   http_timeout: 5
