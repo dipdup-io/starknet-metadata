@@ -69,7 +69,7 @@ func main() {
 			Config:         cfg.Hasura,
 			DatabaseConfig: cfg.Database,
 			Views:          views,
-			Models:         []any{new(storage.State), new(storage.TokenMetadata)},
+			Models:         []any{new(storage.State), new(storage.Address), new(storage.TokenMetadata)},
 		}); err != nil {
 			log.Err(err).Msg("hasura.Create")
 		}
