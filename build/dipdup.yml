@@ -87,8 +87,8 @@ metadata:
   
   filler:
     datasource: node
-    rps: 10
-    workers_count: 5
+    rps: 3
+    workers_count: 2
     max_attempts: 5
     delay: 10
 
@@ -131,10 +131,10 @@ hasura:
 
 datasources:
   sequencer:
-    url: https://alpha-mainnet.starknet.io/feeder_gateway
+    url: ${SEQUENCER_URL:-https://alpha-mainnet.starknet.io/feeder_gateway}
     kind: starknet_sequencer
     timeout: 30
   node:
-    url: https://starknet-mainnet.infura.io/v3/c472af462a664d93a4ca3962ae5e3749
+    url: ${NODE_URL}
     kind: starknet_node_rpc
     timeout: 30

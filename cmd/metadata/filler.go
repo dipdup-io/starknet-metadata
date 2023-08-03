@@ -29,6 +29,7 @@ const (
 	entrypointSymbol            = "symbol"
 	entrypointDecimals          = "decimals"
 	entrypointTokenUri          = "tokenURI"
+	entrypointTokenUriSmall     = "tokenUri"
 	entrypointUri               = "uri"
 	entrypointGetImplementation = "get_implementation"
 )
@@ -279,8 +280,10 @@ func handlerFillerError(err error) error {
 	switch {
 	case errors.Is(err, context.Canceled):
 		return nil
-	default:
+	case errors.Is(err, context.DeadlineExceeded):
 		return err
+	default:
+		return errors.Wrap(ErrViewExecution, err.Error())
 	}
 }
 
@@ -299,27 +302,56 @@ func (f Filler) getJsonSchema(ctx context.Context, hash []byte) (abi.JsonSchema,
 			return nil, err
 		}
 
-		if name, ok := f.findName(intSchema, entrypointGetImplementation, "getImplementation", "implementation"); ok {
-			impl, err := f.getImplementation(ctx, data.NewFeltFromBytes(hash), name)
-			if err != nil {
-				return nil, err
-			}
-			schemaBytes, err := f.client.JsonSchemaForContract(ctx, &pb.Bytes{
-				Data: impl,
-			})
-			if err != nil {
-				schemaBytes, err = f.client.JsonSchemaForClass(ctx, &pb.Bytes{
-					Data: impl,
-				})
+		if !f.isProxy(intSchema) {
+			return intSchema, nil
+		}
+
+		var (
+			impl []byte
+			typ  = -1
+		)
+
+		proxy, err := f.client.GetProxy(ctx, hash, nil)
+		if err != nil {
+			if name, ok := f.findName(intSchema, entrypointGetImplementation, "getImplementation", "implementation", "getImplementationHash"); ok {
+				impl, err = f.getImplementation(ctx, data.NewFeltFromBytes(hash), name)
 				if err != nil {
 					return nil, err
 				}
+			}
+		} else {
+			impl = proxy.GetHash()
+			typ = int(proxy.GetType())
+		}
+
+		if len(impl) > 0 {
+			var schemaBytes *pb.Bytes
+			switch typ {
+			case 0:
+				schemaBytes, err = f.client.JsonSchemaForClass(ctx, &pb.Bytes{
+					Data: impl,
+				})
+			case 1:
+				schemaBytes, err = f.client.JsonSchemaForContract(ctx, &pb.Bytes{
+					Data: impl,
+				})
+			case -1:
+				schemaBytes, err = f.client.JsonSchemaForContract(ctx, &pb.Bytes{
+					Data: impl,
+				})
+				if err != nil {
+					schemaBytes, err = f.client.JsonSchemaForClass(ctx, &pb.Bytes{
+						Data: impl,
+					})
+				}
+			}
+			if err != nil {
+				return nil, err
 			}
 
 			if err := json.Unmarshal(schemaBytes.Data, &intSchema); err != nil {
 				return nil, err
 			}
-			return intSchema, nil
 		}
 
 		return intSchema, nil
@@ -329,6 +361,14 @@ func (f Filler) getJsonSchema(ctx context.Context, hash []byte) (abi.JsonSchema,
 	}
 
 	return item.Value().(abi.JsonSchema), nil
+}
+
+func (f Filler) isProxy(schema abi.JsonSchema) bool {
+	if _, has := schema.Functions["__default__"]; has {
+		return true
+	}
+	_, has := schema.L1Handlers["__l1_default__"]
+	return has
 }
 
 func (f Filler) findName(schema abi.JsonSchema, names ...string) (string, bool) {
@@ -444,7 +484,7 @@ func (f Filler) getTokenUri(ctx context.Context, schema abi.JsonSchema, address 
 			funcSchema abi.JsonSchemaFunction
 		)
 		for _, e := range []string{
-			entrypointTokenUri, entrypointUri,
+			entrypointTokenUri, entrypointUri, entrypointTokenUriSmall,
 		} {
 			selector, funcSchema, err = f.getSelectorByName(schema, e)
 			if err == nil {

@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/dipdup-io/ipfs-tools v0.0.1
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230730152023-b1c1bf40b85f
-	github.com/dipdup-io/starknet-indexer v0.0.0-20230731122909-db602088c918
+	github.com/dipdup-io/starknet-indexer v0.0.0-20230801105531-83df499908f3
 	github.com/dipdup-io/workerpool v0.0.3
 	github.com/dipdup-net/go-lib v0.2.38
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230614153224-11cee5bf9248
