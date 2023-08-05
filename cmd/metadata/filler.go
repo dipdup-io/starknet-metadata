@@ -44,7 +44,7 @@ var (
 )
 
 var (
-	multicallEntrypoint = encoding.GetSelectorFromName("execute_calls")
+	multicallEntrypoint = encoding.GetSelectorWithPrefixFromName("execute_calls")
 )
 
 func newCaller(name string, datasources map[string]config.DataSource, rps int) (caller.Caller, error) {
