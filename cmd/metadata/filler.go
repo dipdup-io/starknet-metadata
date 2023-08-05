@@ -43,6 +43,10 @@ var (
 	ErrTooBig             = errors.New("metadata file too big")
 )
 
+var (
+	multicallEntrypoint = encoding.GetSelectorFromName("execute_calls")
+)
+
 func newCaller(name string, datasources map[string]config.DataSource, rps int) (caller.Caller, error) {
 	if cfg, ok := datasources[name]; ok {
 		switch name {
@@ -66,6 +70,7 @@ type Filler struct {
 	delay        int
 	queue        *types.Queue
 	maxAttempts  uint
+	multicall    string
 	wg           *sync.WaitGroup
 }
 
@@ -101,6 +106,7 @@ func NewFiller(cfg FillerConfig, datasources map[string]config.DataSource, tm st
 		delay:        delay,
 		queue:        types.NewQueue(),
 		maxAttempts:  uint(maxAttempts),
+		multicall:    cfg.Multicall,
 		wg:           new(sync.WaitGroup),
 	}
 
@@ -223,16 +229,35 @@ func (f Filler) handleErc20(ctx context.Context, schema abi.JsonSchema, task *st
 		task.Metadata = make(map[string]any)
 	}
 
-	if err := handlerFillerError(f.getName(ctx, schema, address, task)); err != nil {
+	nameSelector, _, err := f.getSelectorByName(schema, entrypointName)
+	if err != nil {
+		return err
+	}
+	symbolSelector, _, err := f.getSelectorByName(schema, entrypointSymbol)
+	if err != nil {
+		return err
+	}
+	decimalsSelector, _, err := f.getSelectorByName(schema, entrypointDecimals)
+	if err != nil {
 		return err
 	}
 
-	if err := handlerFillerError(f.getSymbol(ctx, schema, address, task)); err != nil {
-		return err
-	}
+	if f.multicall != "" {
+		if err := handlerFillerError(f.multicallErc20(ctx, address, nameSelector, symbolSelector, decimalsSelector, task)); err != nil {
+			return err
+		}
+	} else {
+		if err := handlerFillerError(f.getName(ctx, address, nameSelector, task)); err != nil {
+			return err
+		}
 
-	if err := handlerFillerError(f.getDecimals(ctx, schema, address, task)); err != nil {
-		return err
+		if err := handlerFillerError(f.getSymbol(ctx, address, symbolSelector, task)); err != nil {
+			return err
+		}
+
+		if err := handlerFillerError(f.getDecimals(ctx, address, decimalsSelector, task)); err != nil {
+			return err
+		}
 	}
 
 	task.Status = storage.StatusSuccess
@@ -245,16 +270,35 @@ func (f Filler) handleErc721(ctx context.Context, schema abi.JsonSchema, task *s
 		task.Metadata = make(map[string]any)
 	}
 
-	if err := handlerFillerError(f.getName(ctx, schema, address, task)); err != nil {
+	nameSelector, _, err := f.getSelectorByName(schema, entrypointName)
+	if err != nil {
+		return err
+	}
+	symbolSelector, _, err := f.getSelectorByName(schema, entrypointSymbol)
+	if err != nil {
+		return err
+	}
+	uriSelector, funcSchema, err := f.getUriSelector(schema)
+	if err != nil {
 		return err
 	}
 
-	if err := handlerFillerError(f.getSymbol(ctx, schema, address, task)); err != nil {
-		return err
-	}
+	if f.multicall != "" {
+		if err := handlerFillerError(f.multicallErc721(ctx, address, nameSelector, symbolSelector, uriSelector, funcSchema, task)); err != nil {
+			return err
+		}
+	} else {
+		if err := handlerFillerError(f.getName(ctx, address, nameSelector, task)); err != nil {
+			return err
+		}
 
-	if err := handlerFillerError(f.getTokenUri(ctx, schema, address, task)); err != nil {
-		return err
+		if err := handlerFillerError(f.getSymbol(ctx, address, symbolSelector, task)); err != nil {
+			return err
+		}
+
+		if err := handlerFillerError(f.getTokenUri(ctx, address, uriSelector, funcSchema, task)); err != nil {
+			return err
+		}
 	}
 
 	task.Status = storage.StatusFilled
@@ -264,7 +308,12 @@ func (f Filler) handleErc721(ctx context.Context, schema abi.JsonSchema, task *s
 func (f Filler) handleErc1155(ctx context.Context, schema abi.JsonSchema, task *storage.TokenMetadata) error {
 	address := data.NewFeltFromBytes(task.Contract.Hash)
 
-	if err := handlerFillerError(f.getTokenUri(ctx, schema, address, task)); err != nil {
+	selector, funcSchema, err := f.getUriSelector(schema)
+	if err != nil {
+		return err
+	}
+
+	if err := handlerFillerError(f.getTokenUri(ctx, address, selector, funcSchema, task)); err != nil {
 		return err
 	}
 
@@ -397,14 +446,75 @@ func (f Filler) getSelectorByName(schema abi.JsonSchema, name string) (string, a
 	return encoding.GetSelectorWithPrefixFromName(entrypoint), schema.Functions[entrypoint], nil
 }
 
-func (f Filler) getName(ctx context.Context, schema abi.JsonSchema, address data.Felt, task *storage.TokenMetadata) error {
+func (f Filler) multicallErc20(ctx context.Context, address data.Felt, selectorName, selectorSymbol, selectorDecimals string, task *storage.TokenMetadata) error {
+	response, err := f.caller.Call(ctx, f.multicall, multicallEntrypoint, []string{
+		"0x3",
+		address.String(),
+		selectorName,
+		"0x0",
+		address.String(),
+		selectorSymbol,
+		"0x0",
+		address.String(),
+		selectorDecimals,
+		"0x0",
+		"0x0",
+	})
+	if err != nil {
+		return err
+	}
+	if len(response) != 4 {
+		return errors.Wrapf(ErrViewExecution, "invalid multicall response: %v", response)
+	}
+	task.Metadata[entrypointName] = response[1].ToAsciiString()
+	task.Metadata[entrypointSymbol] = response[2].ToAsciiString()
+	task.Metadata[entrypointDecimals] = response[3].ToAsciiString()
+	return nil
+}
+
+func (f Filler) multicallErc721(ctx context.Context, address data.Felt, selectorName, selectorSymbol, selectorUri string, uriSchema abi.JsonSchemaFunction, task *storage.TokenMetadata) error {
+	tokenId, err := data.NewUint256FromString(task.TokenId.String())
+	if err != nil {
+		return errors.Wrap(ErrInvalidTokenId, err.Error())
+	}
+	tokenCalldata := tokenId.Calldata()
+	lenCallData := fmt.Sprintf("%d", len(tokenCalldata))
+	calldata := []string{
+		"0x3",
+		address.String(),
+		selectorName,
+		"0x0",
+		address.String(),
+		selectorSymbol,
+		"0x0",
+		address.String(),
+		selectorUri,
+	}
+	calldata = append(calldata, lenCallData, lenCallData)
+	calldata = append(calldata, tokenCalldata...)
+
+	response, err := f.caller.Call(ctx, f.multicall, multicallEntrypoint, calldata)
+	if err != nil {
+		return err
+	}
+	if len(response) < 4 {
+		return errors.Wrapf(ErrViewExecution, "invalid multicall response: %v", response)
+	}
+	task.Metadata[entrypointName] = response[1].ToAsciiString()
+	task.Metadata[entrypointSymbol] = response[2].ToAsciiString()
+	uri := parseUri(uriSchema, response[3:])
+	if url, err := url.ParseRequestURI(uri); err != nil {
+		return errors.Wrap(ErrInvalidUri, uri)
+	} else if err := ValidateURL(url); err != nil {
+		return errors.Wrap(ErrInvalidUri, uri)
+	}
+	task.Uri = &uri
+	return nil
+}
+
+func (f Filler) getName(ctx context.Context, address data.Felt, selector string, task *storage.TokenMetadata) error {
 	cacheKey := fmt.Sprintf("%x:%s", address.Bytes(), entrypointName)
 	item, err := f.cache.Fetch(cacheKey, time.Hour, func() (interface{}, error) {
-		selector, _, err := f.getSelectorByName(schema, entrypointName)
-		if err != nil {
-			return nil, err
-		}
-
 		response, err := f.caller.Call(ctx, address.String(), selector, []string{})
 		if err != nil {
 			return nil, err
@@ -423,14 +533,9 @@ func (f Filler) getName(ctx context.Context, schema abi.JsonSchema, address data
 	return nil
 }
 
-func (f Filler) getSymbol(ctx context.Context, schema abi.JsonSchema, address data.Felt, task *storage.TokenMetadata) error {
+func (f Filler) getSymbol(ctx context.Context, address data.Felt, selector string, task *storage.TokenMetadata) error {
 	cacheKey := fmt.Sprintf("%x:%s", address.Bytes(), entrypointSymbol)
 	item, err := f.cache.Fetch(cacheKey, time.Hour, func() (interface{}, error) {
-		selector, _, err := f.getSelectorByName(schema, entrypointSymbol)
-		if err != nil {
-			return nil, err
-		}
-
 		response, err := f.caller.Call(ctx, address.String(), selector, []string{})
 		if err != nil {
 			return nil, err
@@ -449,14 +554,9 @@ func (f Filler) getSymbol(ctx context.Context, schema abi.JsonSchema, address da
 	return nil
 }
 
-func (f Filler) getDecimals(ctx context.Context, schema abi.JsonSchema, address data.Felt, task *storage.TokenMetadata) error {
+func (f Filler) getDecimals(ctx context.Context, address data.Felt, selector string, task *storage.TokenMetadata) error {
 	cacheKey := fmt.Sprintf("%x:%s", address.Bytes(), entrypointDecimals)
 	item, err := f.cache.Fetch(cacheKey, time.Hour, func() (interface{}, error) {
-		selector, _, err := f.getSelectorByName(schema, entrypointDecimals)
-		if err != nil {
-			return nil, err
-		}
-
 		response, err := f.caller.Call(ctx, address.String(), selector, []string{})
 		if err != nil {
 			return nil, err
@@ -475,26 +575,21 @@ func (f Filler) getDecimals(ctx context.Context, schema abi.JsonSchema, address 
 	return nil
 }
 
-func (f Filler) getTokenUri(ctx context.Context, schema abi.JsonSchema, address data.Felt, task *storage.TokenMetadata) error {
+func (f Filler) getUriSelector(schema abi.JsonSchema) (selector string, funcSchema abi.JsonSchemaFunction, err error) {
+	for _, e := range []string{
+		entrypointTokenUri, entrypointUri, entrypointTokenUriSmall,
+	} {
+		selector, funcSchema, err = f.getSelectorByName(schema, e)
+		if err == nil {
+			return
+		}
+	}
+	return
+}
+
+func (f Filler) getTokenUri(ctx context.Context, address data.Felt, selector string, funcSchema abi.JsonSchemaFunction, task *storage.TokenMetadata) error {
 	cacheKey := fmt.Sprintf("%x:uri:%s", address.Bytes(), task.TokenId.String())
 	item, err := f.cache.Fetch(cacheKey, time.Hour, func() (interface{}, error) {
-		var (
-			err        error
-			selector   string
-			funcSchema abi.JsonSchemaFunction
-		)
-		for _, e := range []string{
-			entrypointTokenUri, entrypointUri, entrypointTokenUriSmall,
-		} {
-			selector, funcSchema, err = f.getSelectorByName(schema, e)
-			if err == nil {
-				break
-			}
-		}
-		if err != nil {
-			return nil, err
-		}
-
 		tokenId, err := data.NewUint256FromString(task.TokenId.String())
 		if err != nil {
 			return nil, errors.Wrap(ErrInvalidTokenId, err.Error())

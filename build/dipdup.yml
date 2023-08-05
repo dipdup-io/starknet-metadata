@@ -91,6 +91,7 @@ metadata:
     workers_count: 3
     max_attempts: ${MAX_RETRY_COUNT:-5}
     delay: 10
+    multicall_contract: ${MULTICALL_CONTRACT}
 
   receiver:
     workers_count: 10

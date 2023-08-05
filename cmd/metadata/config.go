@@ -76,6 +76,7 @@ type FillerConfig struct {
 	WorkersCount int    `yaml:"workers_count" validate:"required,min=1"`
 	MaxAttempts  int    `yaml:"max_attempts" validate:"omitempty,min=1"`
 	Delay        int    `yaml:"delay" validate:"omitempty,min=1"`
+	Multicall    string `yaml:"multicall_contract" validate:"omitempty"`
 }
 
 // ReceiverConfig -
