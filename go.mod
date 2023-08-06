@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/dipdup-io/ipfs-tools v0.0.1
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230730152023-b1c1bf40b85f
-	github.com/dipdup-io/starknet-indexer v0.0.0-20230801105531-83df499908f3
+	github.com/dipdup-io/starknet-indexer v0.0.0-20230806100128-b3a932a13f89
 	github.com/dipdup-io/workerpool v0.0.3
 	github.com/dipdup-net/go-lib v0.2.38
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230614153224-11cee5bf9248
@@ -214,13 +214,13 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.11.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
