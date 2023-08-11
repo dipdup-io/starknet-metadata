@@ -115,6 +115,7 @@ func (s *TestSuite) TearDownSuite() {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer ctxCancel()
 
+	s.Require().NoError(s.storage.Close())
 	s.Require().NoError(s.psqlContainer.Terminate(ctx))
 }
 
