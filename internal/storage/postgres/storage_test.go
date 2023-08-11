@@ -134,24 +134,6 @@ func (s *TestSuite) TestTokenMetadataGetByStatus() {
 	}
 }
 
-func (s *TestSuite) TestTokenMetadataGetByHash() {
-	for _, status := range []storage.Status{
-		storage.StatusFailed,
-		storage.StatusFilled,
-		storage.StatusNew,
-		storage.StatusSuccess,
-	} {
-		ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer ctxCancel()
-		response, err := s.storage.TokenMetadata.GetByStatus(ctx, status, 1, 0, 0, 0)
-		s.Require().NoError(err)
-
-		s.Require().Len(response, 1)
-		s.Require().Equal(response[0].Status, status)
-		s.Require().NotNil(response[0].Contract.Hash)
-	}
-}
-
 func TestSuite_Run(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
