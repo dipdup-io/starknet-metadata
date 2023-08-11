@@ -108,6 +108,7 @@ func (s *TestSuite) SetupSuite() {
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(fixtures.Load())
+	s.Require().NoError(db.Close())
 }
 
 func (s *TestSuite) TearDownSuite() {
