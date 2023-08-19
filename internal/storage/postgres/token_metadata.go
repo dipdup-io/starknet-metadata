@@ -14,28 +14,23 @@ type TokenMetadata struct {
 }
 
 // NewTokenMetadata -
-func NewTokenMetadata(db *database.PgGo) *TokenMetadata {
+func NewTokenMetadata(db *database.Bun) *TokenMetadata {
 	return &TokenMetadata{
 		Table: postgres.NewTable[*storage.TokenMetadata](db),
 	}
 }
 
-// GetByHash -
-func (tm *TokenMetadata) GetByHash(ctx context.Context, hash []byte) (tokenMetadata storage.TokenMetadata, err error) {
-	err = tm.DB().ModelContext(ctx, &tokenMetadata).Where("hash = ?", hash).First()
-	return
-}
-
 // GetByStatus -
 func (tm *TokenMetadata) GetByStatus(ctx context.Context, status storage.Status, limit, offset, attempts, delay int) (response []storage.TokenMetadata, err error) {
-	if delay < 0 {
-		delay = 0
-	}
-	query := tm.DB().ModelContext(ctx, (*storage.TokenMetadata)(nil)).
+	query := tm.DB().NewSelect().Model(&response).
 		Where("status = ?", status).
-		Where("created_at < (extract(epoch from current_timestamp) - ? * attempts)", delay).
 		Relation("Contract").
-		OrderExpr("attempts asc, updated_at desc")
+		Order("attempts asc", "updated_at desc")
+
+	if delay > 0 {
+		query = query.
+			Where("created_at < (extract(epoch from current_timestamp) - ? * attempts)", delay)
+	}
 
 	if limit < 1 {
 		limit = 10
@@ -46,6 +41,6 @@ func (tm *TokenMetadata) GetByStatus(ctx context.Context, status storage.Status,
 	if attempts > 0 {
 		query.Where("attempts < ?", attempts)
 	}
-	err = query.Limit(limit).Offset(offset).Select(&response)
+	err = query.Limit(limit).Offset(offset).Scan(ctx)
 	return
 }

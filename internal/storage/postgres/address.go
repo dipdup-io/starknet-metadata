@@ -12,7 +12,7 @@ type Address struct {
 }
 
 // NewAddress -
-func NewAddress(db *database.PgGo) *Address {
+func NewAddress(db *database.Bun) *Address {
 	return &Address{
 		Table: postgres.NewTable[*storage.Address](db),
 	}

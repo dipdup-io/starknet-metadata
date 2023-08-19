@@ -2,15 +2,15 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 
 	models "github.com/dipdup-io/starknet-metadata/internal/storage"
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/uptrace/bun"
 )
 
 // Storage -
@@ -20,6 +20,7 @@ type Storage struct {
 	Address       models.IAddress
 	TokenMetadata models.ITokenMetadata
 	State         models.IState
+	Tx            Transaction
 }
 
 // Create -
@@ -39,15 +40,13 @@ func Create(ctx context.Context, cfg config.Database) (Storage, error) {
 	return s, nil
 }
 
-func initDatabase(ctx context.Context, conn *database.PgGo) error {
+func initDatabase(ctx context.Context, conn *database.Bun) error {
 	if err := createTypes(ctx, conn); err != nil {
 		return err
 	}
 
 	for _, data := range models.Models {
-		if err := conn.DB().WithContext(ctx).Model(data).CreateTable(&orm.CreateTableOptions{
-			IfNotExists: true,
-		}); err != nil {
+		if _, err := conn.DB().NewCreateTable().IfNotExists().Model(data).Exec(ctx); err != nil {
 			if err := conn.Close(); err != nil {
 				return err
 			}
@@ -66,16 +65,16 @@ func initDatabase(ctx context.Context, conn *database.PgGo) error {
 	return createIndices(ctx, conn)
 }
 
-func createIndices(ctx context.Context, conn *database.PgGo) error {
+func createIndices(ctx context.Context, conn *database.Bun) error {
 	log.Info().Msg("creating indexes...")
-	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
+	return conn.DB().RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		return nil
 	})
 }
 
-func createTypes(ctx context.Context, conn *database.PgGo) error {
+func createTypes(ctx context.Context, conn *database.Bun) error {
 	log.Info().Msg("creating custom types...")
-	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
+	return conn.DB().RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		if _, err := tx.ExecContext(
 			ctx,
 			`DO $$

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"syscall"
 
 	ipfs "github.com/dipdup-io/ipfs-tools"
@@ -49,6 +50,29 @@ func main() {
 		return
 	}
 	runtime.GOMAXPROCS(cfg.Metadata.MaxCPU)
+
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = zerolog.LevelInfoValue
+	}
+
+	logLevel, err := zerolog.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		log.Panic().Err(err).Msg("parsing log level")
+		return
+	}
+	zerolog.SetGlobalLevel(logLevel)
+	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
+		short := file
+		for i := len(file) - 1; i > 0; i-- {
+			if file[i] == '/' {
+				short = file[i+1:]
+				break
+			}
+		}
+		file = short
+		return file + ":" + strconv.Itoa(line)
+	}
+	log.Logger = log.Logger.With().Caller().Logger()
 
 	ctx, cancel := context.WithCancel(context.Background())
 

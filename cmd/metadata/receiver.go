@@ -98,7 +98,7 @@ func (r *Receiver) work(ctx context.Context) {
 			}
 			tasks, err := r.storage.GetByStatus(ctx, storage.StatusFilled, 100, 0, r.maxAttempts, r.delay)
 			if err != nil {
-				log.Err(err).Msg("receiving receiving tasks")
+				log.Err(err).Msg("receiving tasks")
 				continue
 			}
 

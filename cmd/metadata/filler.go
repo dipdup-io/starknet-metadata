@@ -337,6 +337,10 @@ func handlerFillerError(err error) error {
 }
 
 func (f Filler) getJsonSchema(ctx context.Context, hash []byte) (abi.JsonSchema, error) {
+	log.Info().
+		Hex("contract", hash).
+		Msg("try to get json schema")
+
 	cacheKey := fmt.Sprintf("%x:schema", hash)
 	item, err := f.cache.Fetch(cacheKey, time.Hour, func() (interface{}, error) {
 		var intSchema abi.JsonSchema
