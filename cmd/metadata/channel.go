@@ -125,7 +125,7 @@ func (channel Channel) parseToken(ctx context.Context, token *pb.Token) error {
 }
 
 func (channel Channel) saveToken(ctx context.Context, metadata storage.TokenMetadata) error {
-	tx, err := channel.storage.Transactable.BeginTransaction(ctx)
+	tx, err := postgres.BeginTransaction(ctx, channel.storage.Transactable)
 	if err != nil {
 		return err
 	}
@@ -136,14 +136,11 @@ func (channel Channel) saveToken(ctx context.Context, metadata storage.TokenMeta
 	}
 
 	if metadata.ContractID > 0 {
-		if _, err := tx.Exec(
-			ctx,
-			`INSERT INTO address (id, hash) VALUES (?,?) ON CONFLICT (id) DO NOTHING`,
-			metadata.Contract.ID,
-			metadata.Contract.Hash,
-		); err != nil {
+		if err := tx.SaveAddress(ctx, &storage.Address{
+			ID:   metadata.Contract.ID,
+			Hash: metadata.Contract.Hash,
+		}); err != nil {
 			return tx.HandleError(ctx, err)
-
 		}
 	}
 

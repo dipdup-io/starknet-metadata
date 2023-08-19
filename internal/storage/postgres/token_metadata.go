@@ -14,7 +14,7 @@ type TokenMetadata struct {
 }
 
 // NewTokenMetadata -
-func NewTokenMetadata(db *database.PgGo) *TokenMetadata {
+func NewTokenMetadata(db *database.Bun) *TokenMetadata {
 	return &TokenMetadata{
 		Table: postgres.NewTable[*storage.TokenMetadata](db),
 	}
@@ -22,10 +22,10 @@ func NewTokenMetadata(db *database.PgGo) *TokenMetadata {
 
 // GetByStatus -
 func (tm *TokenMetadata) GetByStatus(ctx context.Context, status storage.Status, limit, offset, attempts, delay int) (response []storage.TokenMetadata, err error) {
-	query := tm.DB().ModelContext(ctx, (*storage.TokenMetadata)(nil)).
+	query := tm.DB().NewSelect().Model(&response).
 		Where("status = ?", status).
 		Relation("Contract").
-		OrderExpr("attempts asc, updated_at desc")
+		Order("attempts asc", "updated_at desc")
 
 	if delay > 0 {
 		query = query.
@@ -41,6 +41,6 @@ func (tm *TokenMetadata) GetByStatus(ctx context.Context, status storage.Status,
 	if attempts > 0 {
 		query.Where("attempts < ?", attempts)
 	}
-	err = query.Limit(limit).Offset(offset).Select(&response)
+	err = query.Limit(limit).Offset(offset).Scan(ctx)
 	return
 }

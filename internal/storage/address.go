@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // IAddress -
@@ -11,11 +12,10 @@ type IAddress interface {
 
 // Address -
 type Address struct {
-	// nolint
-	tableName struct{} `pg:"address" comment:"Table with starknet addresses."`
+	bun.BaseModel `bun:"table:address" comment:"Table with starknet addresses."`
 
-	ID   uint64 `pg:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
-	Hash []byte `pg:",unique:address_hash" comment:"Address hash."`
+	ID   uint64 `bun:"id,type:bigint,pk,notnull" comment:"Unique internal identity"`
+	Hash []byte `bun:",unique:address_hash" comment:"Address hash."`
 }
 
 // TableName -

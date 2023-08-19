@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/uptrace/bun"
 )
 
 // IState -
@@ -16,12 +17,11 @@ type IState interface {
 
 // State -
 type State struct {
-	// nolint
-	tableName struct{} `pg:"state" comment:"Table contains current indexer's state"`
+	bun.BaseModel `bun:"table:state" comment:"Table contains current indexer's state"`
 
-	ID         uint64    `comment:"Unique internal identity"`
-	Name       string    `pg:",unique:state_name" comment:"Indexer human-readable name"`
-	LastHeight uint64    `pg:",use_zero" comment:"Last block height"`
+	ID         uint64    `bun:"id,pk,autoincrement" comment:"Unique internal identity"`
+	Name       string    `bun:"name,unique:state_name" comment:"Indexer human-readable name"`
+	LastHeight uint64    `comment:"Last block height"`
 	LastTime   time.Time `comment:"Time of last block"`
 }
 
