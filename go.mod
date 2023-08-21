@@ -7,7 +7,7 @@ require (
 	github.com/dipdup-io/starknet-go-api v0.0.0-20230818110656-b2736a55da83
 	github.com/dipdup-io/starknet-indexer v0.0.0-20230819141739-8eb8f315fb6b
 	github.com/dipdup-io/workerpool v0.0.3
-	github.com/dipdup-net/go-lib v0.3.0
+	github.com/dipdup-net/go-lib v0.3.3
 	github.com/dipdup-net/indexer-sdk v0.0.0-20230819120445-392cbc4cfb65
 	github.com/go-testfixtures/testfixtures/v3 v3.9.0
 	github.com/goccy/go-json v0.10.2

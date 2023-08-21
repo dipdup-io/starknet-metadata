@@ -72,7 +72,6 @@ type IPFS struct {
 // FillerConfig -
 type FillerConfig struct {
 	Datasource   string `yaml:"datasource" validate:"required,oneof=sequencer node"`
-	Rps          int    `yaml:"rps" validate:"omitempty,min=1"`
 	WorkersCount int    `yaml:"workers_count" validate:"required,min=1"`
 	MaxAttempts  int    `yaml:"max_attempts" validate:"omitempty,min=1"`
 	Delay        int    `yaml:"delay" validate:"omitempty,min=1"`

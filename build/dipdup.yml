@@ -87,7 +87,6 @@ metadata:
   
   filler:
     datasource: ${DATASOURCE:-node}
-    rps: ${DATASOURCE_RPS:-3}
     workers_count: 3
     max_attempts: ${MAX_RETRY_COUNT:-5}
     delay: 10
@@ -135,7 +134,9 @@ datasources:
     url: ${SEQUENCER_URL:-https://alpha-mainnet.starknet.io/feeder_gateway}
     kind: starknet_sequencer
     timeout: 30
+    rps: ${DATASOURCE_RPS:-3}
   node:
     url: ${NODE_URL}
     kind: starknet_node_rpc
     timeout: 30
+    rps: ${DATASOURCE_RPS:-3}

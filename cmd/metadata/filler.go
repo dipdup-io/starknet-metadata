@@ -47,13 +47,13 @@ var (
 	multicallEntrypoint = encoding.GetSelectorWithPrefixFromName("execute_calls")
 )
 
-func newCaller(name string, datasources map[string]config.DataSource, rps int) (caller.Caller, error) {
+func newCaller(name string, datasources map[string]config.DataSource) (caller.Caller, error) {
 	if cfg, ok := datasources[name]; ok {
 		switch name {
 		case "sequencer":
-			return caller.NewSequencerCaller(cfg, rps), nil
+			return caller.NewSequencerCaller(cfg), nil
 		case "node":
-			return caller.NewNodeRpcCaller(cfg, rps), nil
+			return caller.NewNodeRpcCaller(cfg), nil
 		}
 	}
 	return nil, errors.Errorf("unknown caller type: %s", name)
@@ -92,7 +92,7 @@ func NewFiller(cfg FillerConfig, datasources map[string]config.DataSource, tm st
 		delay = cfg.Delay
 	}
 
-	caller, err := newCaller(cfg.Datasource, datasources, cfg.Rps)
+	caller, err := newCaller(cfg.Datasource, datasources)
 	if err != nil {
 		return Filler{}, err
 	}

@@ -23,14 +23,14 @@ type NodeRpcCaller struct {
 }
 
 // NewNodeRpcCaller -
-func NewNodeRpcCaller(cfg config.DataSource, rps int) *NodeRpcCaller {
+func NewNodeRpcCaller(cfg config.DataSource) *NodeRpcCaller {
 	var (
 		timeout = time.Second * 10
 		opts    = make([]rpc.ApiOption, 0)
 	)
 
-	if rps > 0 {
-		opts = append(opts, rpc.WithRateLimit(rps))
+	if cfg.RequestsPerSecond > 0 {
+		opts = append(opts, rpc.WithRateLimit(cfg.RequestsPerSecond))
 	}
 
 	if cfg.Timeout > 0 {

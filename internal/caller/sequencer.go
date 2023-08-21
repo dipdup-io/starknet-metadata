@@ -16,14 +16,14 @@ type SequencerCaller struct {
 }
 
 // NewSequencerCaller -
-func NewSequencerCaller(cfg config.DataSource, rps int) *SequencerCaller {
+func NewSequencerCaller(cfg config.DataSource) *SequencerCaller {
 	var (
 		timeout = time.Second * 10
 		opts    = make([]sequencer.ApiOption, 0)
 	)
 
-	if rps > 0 {
-		opts = append(opts, sequencer.WithRateLimit(rps))
+	if cfg.RequestsPerSecond > 0 {
+		opts = append(opts, sequencer.WithRateLimit(cfg.RequestsPerSecond))
 	}
 
 	if cfg.Timeout > 0 {

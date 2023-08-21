@@ -140,8 +140,8 @@ github.com/dipdup-io/starknet-indexer v0.0.0-20230819141739-8eb8f315fb6b h1:hzY7
 github.com/dipdup-io/starknet-indexer v0.0.0-20230819141739-8eb8f315fb6b/go.mod h1:WhfP7FE8qNm4azJ8XGXC9cQhrklGpxEW5OzgDO5kmLI=
 github.com/dipdup-io/workerpool v0.0.3 h1:+cnO0/J0e4UiJ0EBEDpvuhriSDVHlsPminGRU2Il+ZI=
 github.com/dipdup-io/workerpool v0.0.3/go.mod h1:m6YMqx7M+fORTyabHD/auKymBRpbDax0t1aPZ1i7GZA=
-github.com/dipdup-net/go-lib v0.3.0 h1:56OImCLIHyLL4Da7UI5H2xyTP65i2FUXSO6Gyxll460=
-github.com/dipdup-net/go-lib v0.3.0/go.mod h1:oBDOSsM/F8fEnmuDnaJ6QA/cHH4lne49ASbsh8WXDe4=
+github.com/dipdup-net/go-lib v0.3.3 h1:vTUI+sT4L+x+eiMf712Cg8EtlqUCMiN6M3vcNaPlCw8=
+github.com/dipdup-net/go-lib v0.3.3/go.mod h1:oBDOSsM/F8fEnmuDnaJ6QA/cHH4lne49ASbsh8WXDe4=
 github.com/dipdup-net/indexer-sdk v0.0.0-20230819120445-392cbc4cfb65 h1:jZ53iH1UhoBTtIj4pRUPz826EFIwr7KYUR7EkwokwPM=
 github.com/dipdup-net/indexer-sdk v0.0.0-20230819120445-392cbc4cfb65/go.mod h1:sZEbnuguFw8kxgD3iNLLHDq1DUDrXI6KcghNMcmNCS4=
 github.com/docker/distribution v2.8.2+incompatible h1:T3de5rq0dB1j30rp0sA2rER+m322EBzniBPB6ZIzuh8=
