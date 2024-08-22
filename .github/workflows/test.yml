@@ -14,9 +14,9 @@ jobs:
           go-version: '1.22'
       - uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.51.2
+          version: v1.60
           args: --timeout=4m
   test:
     runs-on: ubuntu-latest
