@@ -238,14 +238,38 @@ func (indexer *Indexer) Output(name string) (*modules.Output, error) {
 	return nil, errors.Wrap(modules.ErrUnknownOutput, name)
 }
 
-// AttachTo - attach input to output with name
-func (indexer *Indexer) AttachTo(name string, input *modules.Input) error {
-	output, err := indexer.Output(name)
+// AttachTo - attach input to output
+func (indexer *Indexer) AttachTo(outputModule modules.Module, outputName, inputName string) error {
+	outputChannel, err := outputModule.Output(outputName)
 	if err != nil {
 		return err
 	}
-	output.Attach(input)
+
+	input, err := indexer.Input(inputName)
+	if err != nil {
+		return err
+	}
+
+	outputChannel.Attach(input)
 	return nil
+}
+
+// MustInput -
+func (indexer *Indexer) MustInput(name string) *modules.Input {
+	input, err := indexer.Input(name)
+	if err != nil {
+		panic(err)
+	}
+	return input
+}
+
+// MustOutput -
+func (indexer *Indexer) MustOutput(name string) *modules.Output {
+	output, err := indexer.Output(name)
+	if err != nil {
+		panic(err)
+	}
+	return output
 }
 
 // Unsubscribe -
