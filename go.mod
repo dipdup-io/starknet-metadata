@@ -2,8 +2,6 @@ module github.com/dipdup-io/starknet-metadata
 
 go 1.22
 
-toolchain go1.22.5
-
 require (
 	github.com/dipdup-io/ipfs-tools v0.0.3
 	github.com/dipdup-io/starknet-go-api v0.0.0-20240716180626-592465a543e7
