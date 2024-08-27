@@ -115,7 +115,7 @@ database:
   port: ${POSTGRES_PORT:-5432}
   user: ${POSTGRES_USER:-dipdup}
   password: ${POSTGRES_PASSWORD:-changeme}
-  database: ${POSTGRES_DB:-dipdup}
+  database: ${POSTGRES_DB:-starknet_metadata}
 
 hasura:
   url: http://${HASURA_HOST:-hasura}:${HASURA_PORT:-8080}

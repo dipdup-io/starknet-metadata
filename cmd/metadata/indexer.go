@@ -24,11 +24,14 @@ var (
 
 // input name
 const (
-	InputName = "input"
+	InputName  = "input"
+	OutputName = "output"
 )
 
 // Indexer -
 type Indexer struct {
+	modules.BaseModule
+
 	client       *grpc.Client
 	storage      postgres.Storage
 	input        *modules.Input
@@ -60,6 +63,9 @@ func NewIndexer(cfg Metadata, datasources map[string]config.DataSource, pg postg
 	}
 	indexer.filler = filler
 	indexer.receiver = NewReceiver(cfg.Receiver, pg.TokenMetadata, ipfsNode)
+
+	indexer.CreateInput(InputName)
+	indexer.CreateOutput(OutputName)
 
 	return indexer, nil
 }
@@ -236,40 +242,6 @@ func (indexer *Indexer) actualFilters(ctx context.Context, sub *grpc.Subscriptio
 // Output - returns output by name
 func (indexer *Indexer) Output(name string) (*modules.Output, error) {
 	return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-}
-
-// AttachTo - attach input to output
-func (indexer *Indexer) AttachTo(outputModule modules.Module, outputName, inputName string) error {
-	outputChannel, err := outputModule.Output(outputName)
-	if err != nil {
-		return err
-	}
-
-	input, err := indexer.Input(inputName)
-	if err != nil {
-		return err
-	}
-
-	outputChannel.Attach(input)
-	return nil
-}
-
-// MustInput -
-func (indexer *Indexer) MustInput(name string) *modules.Input {
-	input, err := indexer.Input(name)
-	if err != nil {
-		panic(err)
-	}
-	return input
-}
-
-// MustOutput -
-func (indexer *Indexer) MustOutput(name string) *modules.Output {
-	output, err := indexer.Output(name)
-	if err != nil {
-		panic(err)
-	}
-	return output
 }
 
 // Unsubscribe -
