@@ -49,12 +49,12 @@ type Indexer struct {
 // NewIndexer -
 func NewIndexer(cfg Metadata, datasources map[string]config.DataSource, pg postgres.Storage, client *grpc.Client, ipfsNode *ipfs.Node) (*Indexer, error) {
 	indexer := &Indexer{
-		client:  client,
-		storage: pg,
-
-		state: new(models.State),
-		input: modules.NewInput(InputName),
-		wg:    new(sync.WaitGroup),
+		client:     client,
+		storage:    pg,
+		BaseModule: modules.New("Indexer"),
+		state:      new(models.State),
+		input:      modules.NewInput(InputName),
+		wg:         new(sync.WaitGroup),
 	}
 	indexer.channel = NewChannel(pg, indexer.state)
 	filler, err := NewFiller(cfg.Filler, datasources, pg.TokenMetadata, client)
