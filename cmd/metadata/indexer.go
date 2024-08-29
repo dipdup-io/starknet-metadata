@@ -34,7 +34,6 @@ type Indexer struct {
 
 	client       *grpc.Client
 	storage      postgres.Storage
-	input        *modules.Input
 	state        *models.State
 	subscription grpc.Subscription
 	subId        uint64
@@ -53,7 +52,6 @@ func NewIndexer(cfg Metadata, datasources map[string]config.DataSource, pg postg
 		storage:    pg,
 		BaseModule: modules.New("Indexer"),
 		state:      new(models.State),
-		input:      modules.NewInput(InputName),
 		wg:         new(sync.WaitGroup),
 	}
 	indexer.channel = NewChannel(pg, indexer.state)
@@ -64,7 +62,7 @@ func NewIndexer(cfg Metadata, datasources map[string]config.DataSource, pg postg
 	indexer.filler = filler
 	indexer.receiver = NewReceiver(cfg.Receiver, pg.TokenMetadata, ipfsNode)
 
-	indexer.CreateInput(InputName)
+	indexer.CreateInputWithCapacity(InputName, 1024*16)
 	indexer.CreateOutput(OutputName)
 
 	return indexer, nil
@@ -87,11 +85,6 @@ func (indexer *Indexer) Start(ctx context.Context) {
 
 	indexer.filler.Start(ctx)
 	indexer.receiver.Start(ctx)
-}
-
-// Name -
-func (indexer *Indexer) Name() string {
-	return "starknet_metadata_indexer"
 }
 
 // Subscribe -
@@ -132,16 +125,6 @@ func (indexer *Indexer) init(ctx context.Context) error {
 	}
 }
 
-// Input - returns input by name
-func (indexer *Indexer) Input(name string) (*modules.Input, error) {
-	switch name {
-	case InputName:
-		return indexer.input, nil
-	default:
-		return nil, errors.Wrap(modules.ErrUnknownInput, name)
-	}
-}
-
 func (indexer *Indexer) listen(ctx context.Context) {
 	defer indexer.wg.Done()
 
@@ -159,7 +142,7 @@ func (indexer *Indexer) listen(ctx context.Context) {
 
 		case msg, ok := <-input.Listen():
 			if !ok {
-				continue
+				return
 			}
 
 			switch typ := msg.(type) {
@@ -192,7 +175,7 @@ func (indexer *Indexer) reconnectThread(ctx context.Context) {
 	}
 }
 
-func (indexer *Indexer) resubscribe(ctx context.Context, id uint64) error {
+func (indexer *Indexer) resubscribe(ctx context.Context, _ uint64) error {
 	for !indexer.channel.IsEmpty() {
 		select {
 		case <-ctx.Done():
@@ -239,11 +222,6 @@ func (indexer *Indexer) actualFilters(ctx context.Context, sub *grpc.Subscriptio
 	return nil
 }
 
-// Output - returns output by name
-func (indexer *Indexer) Output(name string) (*modules.Output, error) {
-	return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-}
-
 // Unsubscribe -
 func (indexer *Indexer) Unsubscribe(ctx context.Context) error {
 	log.Info().Uint64("id", indexer.subId).Msg("unsubscribing...")
@@ -266,10 +244,6 @@ func (indexer *Indexer) Close() error {
 	}
 
 	if err := indexer.channel.Close(); err != nil {
-		return err
-	}
-
-	if err := indexer.input.Close(); err != nil {
 		return err
 	}
 

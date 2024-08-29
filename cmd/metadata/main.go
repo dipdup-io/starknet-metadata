@@ -13,9 +13,7 @@ import (
 	"github.com/dipdup-io/starknet-metadata/internal/storage"
 	"github.com/dipdup-io/starknet-metadata/internal/storage/postgres"
 	"github.com/dipdup-net/go-lib/hasura"
-	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	grpcSDK "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
-	"github.com/dipdup-net/indexer-sdk/pkg/modules/printer"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -82,7 +80,7 @@ func main() {
 		return
 	}
 
-	views, err := createViews(ctx, pg)
+	views, err := createViews(pg)
 	if err != nil {
 		log.Panic().Err(err).Msg("create views")
 		return
@@ -117,8 +115,8 @@ func main() {
 		return
 	}
 
-	if err := modules.Connect(client, indexer, grpc.OutputMessages, printer.InputName); err != nil {
-		log.Panic().Err(err).Msg("module connect")
+	if err := indexer.AttachTo(client, grpc.OutputMessages, InputName); err != nil {
+		log.Panic().Err(err).Msg("connect indexer to grpc module")
 		return
 	}
 
