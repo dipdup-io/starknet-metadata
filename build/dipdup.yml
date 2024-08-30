@@ -125,7 +125,7 @@ hasura:
   rest: true
   source:
     name: default
-    database_host: ${HASURA_POSTGRES_HOST}
+    database_host: ${HASURA_POSTGRES_HOST:-db}
     use_prepared_statements: true
     isolation_level: read-committed
 

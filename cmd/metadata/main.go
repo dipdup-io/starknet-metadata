@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/signal"
 	"runtime"
@@ -87,6 +88,8 @@ func main() {
 	}
 
 	if cfg.Hasura != nil {
+		hasuraConfig, _ := json.Marshal(cfg.Hasura)
+		log.Info().RawJSON("HasuraConfig", hasuraConfig).Msg("")
 		if err := hasura.Create(ctx, hasura.GenerateArgs{
 			Config:         cfg.Hasura,
 			DatabaseConfig: cfg.Database,
