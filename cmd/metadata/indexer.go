@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	ipfs "github.com/dipdup-io/ipfs-tools"
+	"github.com/dipdup-io/ipfs-tools"
 	"github.com/dipdup-io/starknet-go-api/pkg/data"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc"
 	"github.com/dipdup-io/starknet-indexer/pkg/grpc/pb"
@@ -27,6 +27,8 @@ const (
 	InputName  = "input"
 	OutputName = "output"
 )
+
+const IndexerName = "Indexer"
 
 // Indexer -
 type Indexer struct {
@@ -50,7 +52,7 @@ func NewIndexer(cfg Metadata, datasources map[string]config.DataSource, pg postg
 	indexer := &Indexer{
 		client:     client,
 		storage:    pg,
-		BaseModule: modules.New("Indexer"),
+		BaseModule: modules.New(IndexerName),
 		state:      new(models.State),
 		wg:         new(sync.WaitGroup),
 	}
@@ -113,16 +115,21 @@ func (indexer *Indexer) Subscribe(ctx context.Context, subscriptions map[string]
 
 func (indexer *Indexer) init(ctx context.Context) error {
 	state, err := indexer.storage.State.ByName(ctx, indexer.Name())
-	switch {
-	case err == nil:
-		indexer.state = &state
-		return nil
-	case indexer.storage.State.IsNoRows(err):
+	if err != nil {
+		if !indexer.storage.State.IsNoRows(err) {
+			return err
+		}
+
 		indexer.state.Name = indexer.Name()
-		return indexer.storage.State.Save(ctx, indexer.state)
-	default:
-		return err
+		if err := indexer.storage.State.Save(ctx, indexer.state); err != nil {
+			return err
+		}
+	} else {
+		indexer.state = &state
 	}
+
+	indexer.channel.state = indexer.state
+	return nil
 }
 
 func (indexer *Indexer) listen(ctx context.Context) {
