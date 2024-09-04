@@ -24,11 +24,11 @@ func init() {
 			if token.Metadata == nil {
 				continue
 			}
-			decimalsUnicode, ok := token.Metadata["decimals"].(string)
-			if !ok || decimalsUnicode == "" {
+			unicodeDecimals, ok := token.Metadata["decimals"].(string)
+			if !ok || unicodeDecimals == "" {
 				continue
 			}
-			runeDecimals := []rune(decimalsUnicode)[0]
+			runeDecimals := []rune(unicodeDecimals)[0]
 			token.Metadata["decimals"] = int(runeDecimals)
 			_, err = db.NewUpdate().
 				Model(&token).
@@ -41,7 +41,7 @@ func init() {
 		}
 		log.Info().
 			Int("updated erc20 tokens amount", len(erc20Tokens)).
-			Msg("migration 0001 applied")
+			Msg("migration applied")
 		return nil
 
 	}, func(ctx context.Context, db *bun.DB) error {
