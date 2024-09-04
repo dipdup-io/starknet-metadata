@@ -472,9 +472,11 @@ func (f Filler) multicallErc20(ctx context.Context, address data.Felt, selectorN
 	}
 	task.Metadata[entrypointName] = response[1].ToAsciiString()
 	task.Metadata[entrypointSymbol] = response[2].ToAsciiString()
-	unicodeDecimals := response[3].ToAsciiString()
-	runeDecimals := []rune(unicodeDecimals)[0]
-	task.Metadata[entrypointDecimals] = int(runeDecimals)
+	decimals, err := response[3].Uint64()
+	if err != nil {
+		return err
+	}
+	task.Metadata[entrypointDecimals] = decimals
 	return nil
 }
 
