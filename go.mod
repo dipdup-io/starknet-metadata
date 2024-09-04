@@ -14,11 +14,11 @@ require (
 	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.33.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	github.com/uptrace/bun v1.1.17
+	github.com/uptrace/bun v1.2.3
 )
 
 require (
@@ -196,6 +196,7 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/puzpuzpuz/xsync/v3 v3.4.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-20 v0.3.3 // indirect
 	github.com/quic-go/quic-go v0.38.1 // indirect
@@ -211,7 +212,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.22.0 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
 	github.com/ucarion/urlpath v0.0.0-20200424170820-7ccc79b76bbb // indirect
-	github.com/uptrace/bun/dialect/pgdialect v1.1.17 // indirect
+	github.com/uptrace/bun/dialect/pgdialect v1.2.3 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/wealdtech/go-merkletree v1.0.1-0.20230205101955-ec7a95ea11ca // indirect
@@ -245,7 +246,7 @@ require (
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.15.0 // indirect

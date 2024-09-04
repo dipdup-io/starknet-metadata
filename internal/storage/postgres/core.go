@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"github.com/dipdup-io/starknet-metadata/internal/storage/postgres/migrations"
+	"github.com/uptrace/bun/migrate"
 
 	models "github.com/dipdup-io/starknet-metadata/internal/storage"
 	"github.com/dipdup-net/go-lib/config"
@@ -62,6 +64,10 @@ func initDatabase(ctx context.Context, conn *database.Bun) error {
 		return errors.Wrap(err, "make comments")
 	}
 
+	if err := applyMigrations(ctx, conn); err != nil {
+		return err
+	}
+
 	return createIndices(ctx, conn)
 }
 
@@ -99,4 +105,13 @@ func createTypes(ctx context.Context, conn *database.Bun) error {
 		}
 		return nil
 	})
+}
+
+func applyMigrations(ctx context.Context, conn *database.Bun) error {
+	migrator := migrate.NewMigrator(conn.DB(), migrations.DbMigrations)
+	if err := migrator.Init(ctx); err != nil {
+		return err
+	}
+	_, err := migrator.Migrate(ctx)
+	return err
 }
