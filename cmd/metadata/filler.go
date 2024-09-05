@@ -18,6 +18,7 @@ import (
 	"github.com/dipdup-io/starknet-metadata/internal/types"
 	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/go-lib/config"
+	"github.com/dipdup-net/indexer-sdk/pkg/jsonschema"
 	"github.com/goccy/go-json"
 	"github.com/karlseguin/ccache/v2"
 	"github.com/pkg/errors"
@@ -653,7 +654,7 @@ func (f Filler) getImplementation(ctx context.Context, address data.Felt, name s
 func parseUri(funcSchema abi.JsonSchemaFunction, response []data.Felt) string {
 	var isArray bool
 	for name := range funcSchema.Output.Properties {
-		if strings.HasSuffix(name, "_len") {
+		if strings.HasSuffix(name, "_len") || funcSchema.Output.Properties[name].Type == jsonschema.ItemTypeArray {
 			isArray = true
 			break
 		}
