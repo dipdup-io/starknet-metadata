@@ -143,12 +143,15 @@ func (r *Receiver) worker(ctx context.Context, task storage.TokenMetadata) {
 		Str("uri", *task.Uri).
 		Msg("try to receive token metadata")
 
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*30)
+	defer cancel()
+
 	var err error
 	switch {
 	case strings.HasPrefix(*task.Uri, "http://") || strings.HasPrefix(*task.Uri, "https://"):
-		err = r.httpRequest(ctx, &task)
+		err = r.httpRequest(timeoutCtx, &task)
 	case strings.HasPrefix(*task.Uri, "ipfs://"):
-		err = r.ipfsRequest(ctx, &task)
+		err = r.ipfsRequest(timeoutCtx, &task)
 	default:
 		task.Attempts = uint(r.maxAttempts)
 		err = ErrInvalidUri
