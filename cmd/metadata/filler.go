@@ -31,6 +31,7 @@ const (
 	entrypointDecimals          = "decimals"
 	entrypointTokenUri          = "tokenURI"
 	entrypointTokenUriSmall     = "tokenUri"
+	entrypointTokenUriSnake     = "token_uri"
 	entrypointUri               = "uri"
 	entrypointGetImplementation = "get_implementation"
 )
@@ -586,7 +587,7 @@ func (f Filler) getDecimals(ctx context.Context, address data.Felt, selector str
 
 func (f Filler) getUriSelector(schema abi.JsonSchema) (selector string, funcSchema abi.JsonSchemaFunction, err error) {
 	for _, e := range []string{
-		entrypointTokenUri, entrypointUri, entrypointTokenUriSmall,
+		entrypointTokenUri, entrypointUri, entrypointTokenUriSmall, entrypointTokenUriSnake,
 	} {
 		selector, funcSchema, err = f.getSelectorByName(schema, e)
 		if err == nil {
