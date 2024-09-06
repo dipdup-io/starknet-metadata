@@ -22,9 +22,9 @@ func NewTokenMetadata(db *database.Bun) *TokenMetadata {
 
 // GetByStatus -
 func (tm *TokenMetadata) GetByStatus(ctx context.Context, status storage.Status, limit, offset, attempts, delay int) (response []storage.TokenMetadata, err error) {
-	query := tm.DB().NewSelect().Model(&response).
+	query := tm.DB().NewSelect().
+		Model((*storage.TokenMetadata)(nil)).
 		Where("status = ?", status).
-		Relation("Contract").
 		Order("attempts asc", "updated_at desc")
 
 	if delay > 0 {
@@ -41,6 +41,14 @@ func (tm *TokenMetadata) GetByStatus(ctx context.Context, status storage.Status,
 	if attempts > 0 {
 		query.Where("attempts < ?", attempts)
 	}
-	err = query.Limit(limit).Offset(offset).Scan(ctx)
+	query = query.Limit(limit).Offset(offset)
+
+	err = tm.DB().NewSelect().
+		TableExpr("(?) as token_metadata", query).
+		ColumnExpr("token_metadata.*").
+		ColumnExpr("address.hash as contract__hash").
+		Join("left join address on contract_id = address.id").
+		Scan(ctx, &response)
+
 	return
 }
