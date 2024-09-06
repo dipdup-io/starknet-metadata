@@ -2,7 +2,7 @@ version: 0.0.1
 
 metadata:
   ipfs:
-    dir: ./ipfs
+    dir: /etc/starknet-metadata/ipfs
     bootstrap:
     blacklist:
       - /ip4/10.0.0.0/ipcidr/8
