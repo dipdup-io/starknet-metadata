@@ -87,13 +87,13 @@ metadata:
   
   filler:
     datasource: ${DATASOURCE:-node}
-    workers_count: 3
+    workers_count: ${FILLER_WORKERS_COUNT:-3}
     max_attempts: ${MAX_RETRY_COUNT:-5}
     delay: 10
     multicall_contract: ${MULTICALL_CONTRACT}
 
   receiver:
-    workers_count: 10
+    workers_count: ${RECEIVER_WORKERS_COUNT:-10}
     max_attempts: ${MAX_RETRY_COUNT:-5}
     delay: 10
 
