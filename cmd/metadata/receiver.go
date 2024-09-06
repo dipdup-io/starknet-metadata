@@ -30,6 +30,7 @@ type Receiver struct {
 	maxAttempts  int
 	delay        int
 	workersCount int
+	timeout      time.Duration
 
 	wg *sync.WaitGroup
 }
@@ -40,6 +41,7 @@ func NewReceiver(cfg ReceiverConfig, tm storage.ITokenMetadata, ipfsNode *ipfs.N
 		workersCount = 10
 		maxAttempts  = 5
 		delay        = 10
+		timeout      = time.Second * 30
 	)
 
 	if cfg.WorkersCount > 0 {
@@ -50,6 +52,9 @@ func NewReceiver(cfg ReceiverConfig, tm storage.ITokenMetadata, ipfsNode *ipfs.N
 	}
 	if cfg.Delay > 0 {
 		delay = cfg.Delay
+	}
+	if cfg.Timeout > 0 {
+		timeout = time.Second * time.Duration(cfg.Timeout)
 	}
 
 	t := http.DefaultTransport.(*http.Transport).Clone()
@@ -67,6 +72,7 @@ func NewReceiver(cfg ReceiverConfig, tm storage.ITokenMetadata, ipfsNode *ipfs.N
 		maxAttempts:  maxAttempts,
 		delay:        delay,
 		workersCount: workersCount,
+		timeout:      timeout,
 		wg:           new(sync.WaitGroup),
 	}
 
@@ -143,7 +149,7 @@ func (r *Receiver) worker(ctx context.Context, task storage.TokenMetadata) {
 		Str("uri", *task.Uri).
 		Msg("try to receive token metadata")
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*30)
+	timeoutCtx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	var err error
@@ -160,7 +166,7 @@ func (r *Receiver) worker(ctx context.Context, task storage.TokenMetadata) {
 	if err != nil {
 		eStr := err.Error()
 		task.Error = &eStr
-		log.Err(ErrInvalidUri).Str("uri", *task.Uri).Uint("attempt", task.Attempts).Msg("fail to receive metadata")
+		log.Err(err).Str("uri", *task.Uri).Uint("attempt", task.Attempts).Msg("fail to receive metadata")
 
 		if task.Attempts == uint(r.maxAttempts) {
 			task.Status = storage.StatusFailed
