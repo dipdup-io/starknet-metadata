@@ -119,12 +119,18 @@ func (r *Receiver) work(ctx context.Context) {
 }
 
 func (r *Receiver) worker(ctx context.Context, task storage.TokenMetadata) {
+	defer r.queue.Delete(task.Id)
+
 	if task.Uri == nil {
 		task.Status = storage.StatusFailed
 		task.Attempts = uint(r.maxAttempts)
 		err := ErrInvalidUri.Error()
 		task.Error = &err
 		log.Err(ErrInvalidUri).Str("uri", "nil").Msg("fail to receive metadata")
+
+		if err := r.storage.Update(ctx, &task); err != nil {
+			log.Err(err).Msg("saving token metadata in receiver")
+		}
 		return
 	}
 
@@ -161,7 +167,6 @@ func (r *Receiver) worker(ctx context.Context, task storage.TokenMetadata) {
 	if err := r.storage.Update(ctx, &task); err != nil {
 		log.Err(err).Msg("saving token metadata in receiver")
 	}
-	r.queue.Delete(task.Id)
 }
 
 func (r *Receiver) httpRequest(ctx context.Context, task *storage.TokenMetadata) error {

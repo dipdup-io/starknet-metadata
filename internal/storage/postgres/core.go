@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+
 	"github.com/dipdup-io/starknet-metadata/internal/storage/postgres/migrations"
 	"github.com/uptrace/bun/migrate"
 
@@ -74,6 +75,47 @@ func initDatabase(ctx context.Context, conn *database.Bun) error {
 func createIndices(ctx context.Context, conn *database.Bun) error {
 	log.Info().Msg("creating indexes...")
 	return conn.DB().RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		if _, err := tx.NewCreateIndex().
+			IfNotExists().
+			Model((*models.TokenMetadata)(nil)).
+			Index("tm_created_at_idx").
+			Column("created_at").
+			Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewCreateIndex().
+			IfNotExists().
+			Model((*models.TokenMetadata)(nil)).
+			Index("tm_updated_at_idx").
+			Column("updated_at").
+			Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewCreateIndex().
+			IfNotExists().
+			Model((*models.TokenMetadata)(nil)).
+			Index("tm_attempts_idx").
+			Column("attempts").
+			Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewCreateIndex().
+			IfNotExists().
+			Model((*models.TokenMetadata)(nil)).
+			Index("tm_status_idx").
+			Column("status").
+			Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewCreateIndex().
+			IfNotExists().
+			Model((*models.TokenMetadata)(nil)).
+			Index("tm_contract_id_idx").
+			Column("contract_id").
+			Exec(ctx); err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

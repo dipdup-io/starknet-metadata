@@ -27,7 +27,7 @@ type TokenMetadata struct {
 	Id         uint64          `bun:"id,notnull,type:bigint,pk" comment:"Unique internal identity"`
 	CreatedAt  int64           `comment:"Time when row was created"`
 	UpdatedAt  int64           `comment:"Time when row was last updated"`
-	UpdateID   int64           `json:"-" pg:",notnull" comment:"Update counter, increments on each and any token metadata update"`
+	UpdateID   int64           `bun:",notnull" comment:"Update counter, increments on each and any token metadata update"`
 	ContractID uint64          `comment:"Token contract id"`
 	TokenId    decimal.Decimal `bun:",type:numeric" comment:"Token id"`
 	Type       TokenType       `bun:",type:token_type" comment:"Token type"`

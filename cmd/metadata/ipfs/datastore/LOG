@@ -1,0 +1,38 @@
+=============== Sep 6, 2024 (MSK) ===============
+12:41:13.837539 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:41:13.858618 db@open opening
+12:41:13.859087 version@stat F·[] S·0B[] Sc·[]
+12:41:13.863705 db@janitor F·2 G·0
+12:41:13.863730 db@open done T·5.091084ms
+=============== Sep 6, 2024 (MSK) ===============
+12:51:23.531179 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:51:23.531620 version@stat F·[] S·0B[] Sc·[]
+12:51:23.531644 db@open opening
+12:51:23.531671 journal@recovery F·1
+12:51:23.531858 journal@recovery recovering @1
+12:51:23.540986 memdb@flush created L0@2 N·1 S·9KiB "/lo..ers,v1":"/lo..ers,v1"
+12:51:23.541078 version@stat F·[1] S·9KiB[9KiB] Sc·[0.25]
+12:51:23.566022 db@janitor F·3 G·0
+12:51:23.566043 db@open done T·34.391917ms
+12:51:34.695682 db@close closing
+12:51:34.695795 db@close done T·88.542µs
+=============== Sep 6, 2024 (MSK) ===============
+12:53:51.063064 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:53:51.063747 version@stat F·[1] S·9KiB[9KiB] Sc·[0.25]
+12:53:51.063767 db@open opening
+12:53:51.063820 journal@recovery F·1
+12:53:51.064087 journal@recovery recovering @3
+12:53:51.070977 memdb@flush created L0@5 N·1 S·9KiB "/lo..ers,v3":"/lo..ers,v3"
+12:53:51.071117 version@stat F·[2] S·19KiB[19KiB] Sc·[0.50]
+12:53:51.091924 db@janitor F·4 G·0
+12:53:51.091950 db@open done T·28.175917ms
+=============== Sep 6, 2024 (MSK) ===============
+12:55:01.050997 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:55:01.051657 version@stat F·[2] S·19KiB[19KiB] Sc·[0.50]
+12:55:01.051682 db@open opening
+12:55:01.051747 journal@recovery F·1
+12:55:01.051836 journal@recovery recovering @6
+12:55:01.062671 memdb@flush created L0@8 N·1 S·10KiB "/lo..ers,v5":"/lo..ers,v5"
+12:55:01.062795 version@stat F·[3] S·30KiB[30KiB] Sc·[0.75]
+12:55:01.089937 db@janitor F·5 G·0
+12:55:01.089960 db@open done T·38.269ms
