@@ -2,12 +2,11 @@ package storage
 
 import (
 	"context"
-	"time"
-
 	"github.com/dipdup-io/starknet-metadata/internal/types"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/shopspring/decimal"
 	"github.com/uptrace/bun"
+	"time"
 )
 
 // TokenUpdateID - incremental counter
@@ -45,17 +44,16 @@ func (TokenMetadata) TableName() string {
 	return "token_metadata"
 }
 
-// BeforeInsert -
-func (tm *TokenMetadata) BeforeInsert(ctx context.Context) (context.Context, error) {
-	tm.UpdatedAt = time.Now().Unix()
-	tm.CreatedAt = tm.UpdatedAt
-	tm.UpdateID = TokenUpdateID.Increment()
-	return ctx, nil
-}
-
-// BeforeUpdate -
-func (tm *TokenMetadata) BeforeUpdate(ctx context.Context) (context.Context, error) {
-	tm.UpdatedAt = time.Now().Unix()
-	tm.UpdateID = TokenUpdateID.Increment()
-	return ctx, nil
+// BeforeAppendModel -
+func (tm *TokenMetadata) BeforeAppendModel(ctx context.Context, query bun.Query) error {
+	switch query.(type) {
+	case *bun.InsertQuery:
+		tm.UpdatedAt = time.Now().Unix()
+		tm.CreatedAt = tm.UpdatedAt
+		tm.UpdateID = TokenUpdateID.Increment()
+	case *bun.UpdateQuery:
+		tm.UpdatedAt = time.Now().Unix()
+		tm.UpdateID = TokenUpdateID.Increment()
+	}
+	return nil
 }
