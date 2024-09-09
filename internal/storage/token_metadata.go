@@ -2,11 +2,12 @@ package storage
 
 import (
 	"context"
+	"time"
+
 	"github.com/dipdup-io/starknet-metadata/internal/types"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/shopspring/decimal"
 	"github.com/uptrace/bun"
-	"time"
 )
 
 // TokenUpdateID - incremental counter
