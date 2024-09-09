@@ -45,6 +45,8 @@ func (TokenMetadata) TableName() string {
 	return "token_metadata"
 }
 
+var _ bun.BeforeAppendModelHook = (*TokenMetadata)(nil)
+
 // BeforeAppendModel -
 func (tm *TokenMetadata) BeforeAppendModel(ctx context.Context, query bun.Query) error {
 	switch query.(type) {
