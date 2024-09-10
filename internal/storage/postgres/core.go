@@ -69,11 +69,11 @@ func initDatabase(ctx context.Context, conn *database.Bun) error {
 		return err
 	}
 
-	if err := createIndices(ctx, conn); err != nil {
+	if err := setTokenMetadataLastUpdateID(ctx, conn); err != nil {
 		return err
 	}
 
-	return setTokenMetadataLastUpdateID(ctx, conn)
+	return createIndices(ctx, conn)
 }
 
 func createIndices(ctx context.Context, conn *database.Bun) error {
