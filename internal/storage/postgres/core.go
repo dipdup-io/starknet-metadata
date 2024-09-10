@@ -69,7 +69,11 @@ func initDatabase(ctx context.Context, conn *database.Bun) error {
 		return err
 	}
 
-	return createIndices(ctx, conn)
+	if err := createIndices(ctx, conn); err != nil {
+		return err
+	}
+
+	return setTokenMetadataLastUpdateID(ctx, conn)
 }
 
 func createIndices(ctx context.Context, conn *database.Bun) error {
@@ -155,5 +159,17 @@ func applyMigrations(ctx context.Context, conn *database.Bun) error {
 		return err
 	}
 	_, err := migrator.Migrate(ctx)
+	return err
+}
+
+func setTokenMetadataLastUpdateID(ctx context.Context, conn *database.Bun) error {
+	tokenMetadata := new(models.TokenMetadata)
+	err := conn.DB().NewSelect().
+		Model(tokenMetadata).
+		Order("update_id desc").
+		Limit(1).
+		Scan(ctx)
+
+	models.SetLastUpdateID(tokenMetadata.UpdateID)
 	return err
 }
