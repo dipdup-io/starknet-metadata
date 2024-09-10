@@ -174,7 +174,10 @@ func setTokenMetadataLastUpdateID(ctx context.Context, conn *database.Bun) error
 		models.SetLastUpdateID(0)
 		return nil
 	}
+	if err != nil {
+		return err
+	}
 
 	models.SetLastUpdateID(tokenMetadata.UpdateID)
-	return err
+	return nil
 }
