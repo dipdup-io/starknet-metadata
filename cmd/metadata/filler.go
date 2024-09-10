@@ -272,11 +272,11 @@ func (f Filler) handleErc721(ctx context.Context, schema abi.JsonSchema, task *s
 		task.Metadata = make(map[string]any)
 	}
 
-	nameSelector, _, err := f.getSelectorByName(schema, entrypointName)
+	nameSelector, nameSchema, err := f.getSelectorByName(schema, entrypointName)
 	if err != nil {
 		return err
 	}
-	symbolSelector, _, err := f.getSelectorByName(schema, entrypointSymbol)
+	symbolSelector, symbolSchema, err := f.getSelectorByName(schema, entrypointSymbol)
 	if err != nil {
 		return err
 	}
@@ -286,7 +286,7 @@ func (f Filler) handleErc721(ctx context.Context, schema abi.JsonSchema, task *s
 	}
 
 	if f.multicall != "" {
-		if err := handlerFillerError(f.multicallErc721(ctx, address, nameSelector, symbolSelector, uriSelector, funcSchema, task)); err != nil {
+		if err := handlerFillerError(f.multicallErc721(ctx, address, nameSelector, symbolSelector, uriSelector, nameSchema, symbolSchema, funcSchema, task)); err != nil {
 			return err
 		}
 	} else {
@@ -482,7 +482,7 @@ func (f Filler) multicallErc20(ctx context.Context, address data.Felt, selectorN
 	return nil
 }
 
-func (f Filler) multicallErc721(ctx context.Context, address data.Felt, selectorName, selectorSymbol, selectorUri string, uriSchema abi.JsonSchemaFunction, task *storage.TokenMetadata) error {
+func (f Filler) multicallErc721(ctx context.Context, address data.Felt, selectorName, selectorSymbol, selectorUri string, nameSchema, symbolSchema, uriSchema abi.JsonSchemaFunction, task *storage.TokenMetadata) error {
 	tokenId, err := data.NewUint256FromString(task.TokenId.String())
 	if err != nil {
 		return errors.Wrap(ErrInvalidTokenId, err.Error())
@@ -510,9 +510,27 @@ func (f Filler) multicallErc721(ctx context.Context, address data.Felt, selector
 	if len(response) < 4 {
 		return errors.Wrapf(ErrViewExecution, "invalid multicall response: %v", response)
 	}
-	task.Metadata[entrypointName] = response[1].ToAsciiString()
-	task.Metadata[entrypointSymbol] = response[2].ToAsciiString()
-	uri := parseUri(uriSchema, response[3:])
+
+	var offset = 1
+	name, nameOffset, err := parseString(nameSchema, response[offset:])
+	if err != nil {
+		return err
+	}
+	offset += nameOffset
+	task.Metadata[entrypointName] = name
+
+	symbol, symbolOffset, err := parseString(symbolSchema, response[offset:])
+	if err != nil {
+		return err
+	}
+	offset += symbolOffset
+	task.Metadata[entrypointSymbol] = symbol
+
+	uri, _, err := parseString(uriSchema, response[offset:])
+	if err != nil {
+		return err
+	}
+
 	if url, err := url.ParseRequestURI(uri); err != nil {
 		return errors.Wrap(ErrInvalidUri, uri)
 	} else if err := ValidateURL(url); err != nil {
@@ -613,7 +631,10 @@ func (f Filler) getTokenUri(ctx context.Context, address data.Felt, selector str
 			return nil, errors.Wrapf(ErrViewExecution, "invalid response for token uri: %v", response)
 		}
 
-		uri := parseUri(funcSchema, response)
+		uri, _, err := parseString(funcSchema, response)
+		if err != nil {
+			return nil, err
+		}
 		if url, err := url.ParseRequestURI(uri); err != nil {
 			return nil, errors.Wrap(ErrInvalidUri, uri)
 		} else if err := ValidateURL(url); err != nil {
@@ -652,26 +673,56 @@ func (f Filler) getImplementation(ctx context.Context, address data.Felt, name s
 	return item.Value().([]byte), nil
 }
 
-func parseUri(funcSchema abi.JsonSchemaFunction, response []data.Felt) string {
+func parseString(funcSchema abi.JsonSchemaFunction, response []data.Felt) (string, int, error) {
 	var isArray bool
 	for name := range funcSchema.Output.Properties {
-		if strings.HasSuffix(name, "_len") || funcSchema.Output.Properties[name].Type == jsonschema.ItemTypeArray {
+		if funcSchema.Output.Properties[name].Type == jsonschema.ItemTypeArray || strings.HasSuffix(name, "_len") {
 			isArray = true
 			break
+		}
+		if funcSchema.Output.Properties[name].Title == "core::byte_array::ByteArray" {
+			return parseStringArray(response)
 		}
 	}
 
 	if isArray {
 		response = response[1:]
+	} else {
+		return response[0].ToAsciiString(), 1, nil
 	}
 
-	var uri string
+	var (
+		uri   string
+		count int
+	)
 	for i := range response {
 		if response[i] == "0x0" {
+			count = i + 1
 			break
 		}
 		uri += response[i].ToAsciiString()
 	}
 
-	return uri
+	return uri, count, nil
+}
+
+func parseStringArray(response []data.Felt) (string, int, error) {
+	if len(response) == 0 {
+		return "", 0, nil
+	}
+	result := ""
+	fullWords, err := response[0].Uint64()
+	if err != nil {
+		return "", 0, err
+	}
+	if uint64(len(response)-1) < fullWords+2 {
+		return "", 0, errors.Errorf("full words count = %d | response length = %d", fullWords, len(response))
+	}
+
+	for i := uint64(1); i < fullWords+1; i++ {
+		result += response[i].ToAsciiString()
+	}
+
+	result += response[fullWords+1].ToAsciiString()
+	return result, int(fullWords + 3), nil
 }
