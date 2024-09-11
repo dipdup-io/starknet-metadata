@@ -60,3 +60,7 @@ func (tm *TokenMetadata) BeforeAppendModel(ctx context.Context, query bun.Query)
 	}
 	return nil
 }
+
+func SetLastUpdateID(value int64) {
+	TokenUpdateID.Set(value)
+}
